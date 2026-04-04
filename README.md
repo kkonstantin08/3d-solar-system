@@ -1,7 +1,5 @@
 # 3D Solar System
 
-## Русская версия
-
 Интерактивный 3D-проект для просмотра Солнечной системы в браузере. Сцена построена на `Three.js`, а интерфейс оформлен с помощью Tailwind CDN и Lucide Icons.
 
 ### Возможности
@@ -37,8 +35,6 @@ Open with Live Server
 
 - `index.html` - разметка интерфейса и подключение библиотек
 - `scripts.js` - логика сцены, анимации, взаимодействия и камеры
-
-## English Version
 
 Interactive 3D browser project for exploring the Solar System. The scene is built with `Three.js`, while the interface uses Tailwind CDN and Lucide Icons.
 
