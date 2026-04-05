@@ -272,6 +272,13 @@ const planetMeshes = new Map();
 const orbitLines = new Map();
 const validatedOrbitKeys = new Set();
 
+function setDefaultCameraView() {
+  camera.up.set(0, 0, -1);
+  camera.position.set(0, 180, 0);
+  controls.target.set(0, 0, 0);
+  controls.update();
+}
+
 function init() {
   scene = new THREE.Scene();
   scene.fog = new THREE.FogExp2(0x000000, 0.0002);
@@ -282,7 +289,6 @@ function init() {
     0.1,
     1200,
   );
-  camera.position.set(0, 60, 120);
 
   renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -296,6 +302,7 @@ function init() {
   controls.dampingFactor = 0.05;
   controls.minDistance = 10;
   controls.maxDistance = 300;
+  setDefaultCameraView();
 
   const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
   scene.add(ambientLight);
@@ -545,8 +552,8 @@ function updateOrbitLines(force = false) {
     const points = [];
 
     for (let step = 0; step < ORBIT_SEGMENTS; step += 1) {
-      const eccentricAnomaly = (step / ORBIT_SEGMENTS) * Math.PI * 2;
-      const pointState = computeCartesianState(elements, frame, eccentricAnomaly);
+      const orbitalAngle = (step / ORBIT_SEGMENTS) * Math.PI * 2;
+      const pointState = computeCartesianState(elements, frame, orbitalAngle);
       points.push(
         new THREE.Vector3(
           pointState.position.x,
@@ -569,9 +576,8 @@ function computePlanetState(data, date) {
   const meanAnomaly = normalizeRadians(
     elements.meanLongitude - elements.longitudeOfPerihelion,
   );
-  const eccentricAnomaly = solveKeplerEquation(meanAnomaly, elements.e);
 
-  return computeCartesianState(elements, frame, eccentricAnomaly, meanAnomaly);
+  return computeCartesianState(elements, frame, meanAnomaly, meanAnomaly);
 }
 
 function computeOrbitalElements(data, date) {
@@ -589,24 +595,14 @@ function computeOrbitalElements(data, date) {
 }
 
 function computeOrbitalFrame(elements, planetKey) {
-  const argumentOfPerihelion = normalizeRadians(
-    elements.longitudeOfPerihelion - elements.ascendingNode,
-  );
-  const cosOmega = Math.cos(elements.ascendingNode);
-  const sinOmega = Math.sin(elements.ascendingNode);
-  const cosI = Math.cos(elements.inclination);
-  const sinI = Math.sin(elements.inclination);
-  const cosW = Math.cos(argumentOfPerihelion);
-  const sinW = Math.sin(argumentOfPerihelion);
-
   const frame = {
-    omega: argumentOfPerihelion,
-    Px: cosW * cosOmega - sinW * sinOmega * cosI,
-    Py: cosW * sinOmega + sinW * cosOmega * cosI,
-    Pz: sinW * sinI,
-    Qx: -sinW * cosOmega - cosW * sinOmega * cosI,
-    Qy: -sinW * sinOmega + cosW * cosOmega * cosI,
-    Qz: cosW * sinI,
+    omega: 0,
+    Px: 1,
+    Py: 0,
+    Pz: 0,
+    Qx: 0,
+    Qy: 1,
+    Qz: 0,
   };
 
   validateOrbitalFrame(frame, planetKey);
@@ -637,11 +633,10 @@ function validateOrbitalFrame(frame, planetKey) {
   validatedOrbitKeys.add(planetKey);
 }
 
-function computeCartesianState(elements, frame, eccentricAnomaly, meanAnomaly = null) {
-  const r = elements.a * (1 - elements.e * Math.cos(eccentricAnomaly));
-  const X = elements.a * (Math.cos(eccentricAnomaly) - elements.e);
-  const Y =
-    elements.a * Math.sqrt(1 - elements.e * elements.e) * Math.sin(eccentricAnomaly);
+function computeCartesianState(elements, frame, orbitalAngle, meanAnomaly = null) {
+  const r = elements.a;
+  const X = elements.a * Math.cos(orbitalAngle);
+  const Y = elements.a * Math.sin(orbitalAngle);
 
   const eclipticX = frame.Px * X + frame.Qx * Y;
   const eclipticY = frame.Py * X + frame.Qy * Y;
@@ -653,7 +648,7 @@ function computeCartesianState(elements, frame, eccentricAnomaly, meanAnomaly = 
     X,
     Y,
     meanAnomaly,
-    eccentricAnomaly,
+    eccentricAnomaly: orbitalAngle,
     elements,
     frame,
     position,
@@ -661,10 +656,17 @@ function computeCartesianState(elements, frame, eccentricAnomaly, meanAnomaly = 
 }
 
 function toScenePosition(x, y, z) {
+  const distance = Math.sqrt(x * x + y * y + z * z);
+  if (distance === 0) {
+    return { x: 0, y: 0, z: 0 };
+  }
+
+  const scaleFactor = scaleOrbitDistance(distance) / distance;
+
   return {
-    x: scaleOrbitDistance(x),
-    y: scaleOrbitDistance(z),
-    z: scaleOrbitDistance(y),
+    x: x * scaleFactor,
+    y: z * scaleFactor,
+    z: y * scaleFactor,
   };
 }
 
@@ -875,9 +877,7 @@ function setupUIControls() {
     updatePlanetPositions();
     updateOrbitLines(true);
     refreshSimulationUI();
-    camera.position.set(0, 60, 120);
-    controls.target.set(0, 0, 0);
-    controls.update();
+    setDefaultCameraView();
   });
 
   document.getElementById("speedSlider").addEventListener("input", (event) => {
