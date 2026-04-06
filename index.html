@@ -139,7 +139,7 @@
           bottom: 5.25rem;
           width: min(15.5rem, calc(100vw - 1.25rem)) !important;
           max-width: min(15.5rem, calc(100vw - 1.25rem)) !important;
-          max-height: min(20rem, calc(100svh - 14rem)) !important;
+          max-height: min(12rem, calc(100svh - 14rem)) !important;
           overflow-y: auto;
           overscroll-behavior: contain;
         }
@@ -157,6 +157,13 @@
 
         #stopTracking {
           display: none !important;
+        }
+      }
+
+      @media (min-width: 768px) {
+        #planetInfo.planet-info-panel {
+          max-width: 19rem;
+          max-height: calc(100vh - 16rem);
         }
       }
     </style>
@@ -182,11 +189,20 @@
       class="ui-overlay relative z-10 pointer-events-none min-h-screen flex flex-col justify-between p-2.5 sm:p-4 md:p-6"
     >
       <!-- Header -->
-      <header class="flex flex-col md:flex-row justify-between items-start pointer-events-auto gap-2.5 md:gap-4">
-        <div class="glass-panel rounded-2xl p-2.5 md:px-5 md:py-4 w-auto max-w-[18rem] md:max-w-md">
-          <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-[11px] text-slate-400 sm:text-xs md:text-sm">
+      <header
+        class="relative z-20 flex flex-col md:flex-row justify-between items-start pointer-events-auto gap-2.5 md:gap-4"
+      >
+        <div
+          class="hidden md:block glass-panel rounded-2xl p-2.5 md:px-5 md:py-4 w-auto max-w-[18rem] md:max-w-md"
+        >
+          <div
+            class="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-[11px] text-slate-400 sm:text-xs md:text-sm"
+          >
             <span class="flex items-center gap-1.5">
-              <i data-lucide="mouse-pointer-click" class="w-3.5 h-3.5 text-blue-400"></i>
+              <i
+                data-lucide="mouse-pointer-click"
+                class="w-3.5 h-3.5 text-blue-400"
+              ></i>
               Click / tap planet: track
             </span>
             <span class="flex items-center gap-1.5">
@@ -207,8 +223,12 @@
         </div>
 
         <!-- Time Controls -->
-        <div class="glass-panel rounded-2xl p-2.5 md:p-4 flex flex-col gap-2.5 md:gap-3 w-auto min-w-[14rem] md:min-w-0">
-          <div class="flex items-center gap-2 text-xs md:text-sm text-slate-400 mb-0.5 md:mb-1">
+        <div
+          class="glass-panel rounded-2xl p-2.5 md:p-4 flex flex-col gap-2.5 md:gap-3 w-auto min-w-[14rem] md:min-w-0"
+        >
+          <div
+            class="flex items-center gap-2 text-xs md:text-sm text-slate-400 mb-0.5 md:mb-1"
+          >
             <i data-lucide="clock" class="w-4 h-4"></i>
             <span>Time Control</span>
           </div>
@@ -258,12 +278,12 @@
 
       <!-- Bottom Section -->
       <div
-        class="flex flex-col md:flex-row justify-between items-end gap-3 md:gap-4 pointer-events-auto"
+        class="relative z-10 flex flex-col md:flex-row justify-between items-end gap-3 md:gap-4 pointer-events-auto"
       >
         <!-- Planet Info Panel (Hidden by default) -->
         <div
           id="planetInfo"
-          class="planet-info-panel glass-panel rounded-2xl p-2.5 sm:p-5 md:p-6 max-w-sm md:max-w-sm max-h-[calc(100vh-2rem)] overflow-y-auto no-scrollbar transform translate-y-full opacity-0 planet-card-transition hidden absolute bottom-20 right-2 sm:bottom-28 sm:right-4 md:bottom-4 md:right-6"
+          class="planet-info-panel glass-panel rounded-2xl p-2.5 sm:p-5 md:p-5 max-w-sm md:max-w-sm max-h-[calc(100vh-2rem)] md:max-h-[calc(100vh-13rem)] overflow-y-auto no-scrollbar transform translate-y-full opacity-0 planet-card-transition hidden absolute bottom-20 right-2 sm:bottom-28 sm:right-4 md:bottom-4 md:right-6"
         >
           <button
             id="closePlanetInfo"
@@ -271,30 +291,43 @@
           >
             <i data-lucide="x" class="w-5 h-5"></i>
           </button>
-          <div class="flex items-center gap-2 sm:gap-4 mb-2.5 sm:mb-4 pr-7 sm:pr-8">
+          <div
+            class="flex items-center gap-2 sm:gap-4 mb-2.5 sm:mb-4 pr-7 sm:pr-8"
+          >
             <div
               id="planetColorIndicator"
               class="w-9 h-9 sm:w-16 sm:h-16 rounded-full shadow-lg shrink-0"
             ></div>
             <div>
-              <h2 id="planetName" class="text-base sm:text-2xl font-bold text-white"></h2>
+              <h2
+                id="planetName"
+                class="text-base sm:text-2xl font-bold text-white"
+              ></h2>
               <p id="planetType" class="text-xs sm:text-sm text-blue-400"></p>
             </div>
           </div>
           <div class="space-y-1.5 sm:space-y-3 text-xs sm:text-sm">
-            <div class="flex justify-between py-1.5 sm:py-2 border-b border-slate-700">
+            <div
+              class="flex justify-between py-1.5 sm:py-2 border-b border-slate-700"
+            >
               <span class="text-slate-400">Distance from Sun</span>
               <span id="planetDistance" class="text-white font-mono"></span>
             </div>
-            <div class="flex justify-between py-1.5 sm:py-2 border-b border-slate-700">
+            <div
+              class="flex justify-between py-1.5 sm:py-2 border-b border-slate-700"
+            >
               <span class="text-slate-400">Orbital Period</span>
               <span id="planetPeriod" class="text-white font-mono"></span>
             </div>
-            <div class="flex justify-between py-1.5 sm:py-2 border-b border-slate-700">
+            <div
+              class="flex justify-between py-1.5 sm:py-2 border-b border-slate-700"
+            >
               <span class="text-slate-400">Radius</span>
               <span id="planetRadius" class="text-white font-mono"></span>
             </div>
-            <div class="flex justify-between py-1.5 sm:py-2 border-b border-slate-700">
+            <div
+              class="flex justify-between py-1.5 sm:py-2 border-b border-slate-700"
+            >
               <span class="text-slate-400">Temperature</span>
               <span id="planetTemp" class="text-white font-mono"></span>
             </div>
@@ -302,13 +335,18 @@
               <span class="text-slate-400">Moons</span>
               <span id="planetMoons" class="text-white font-mono"></span>
             </div>
-            <div class="flex justify-between py-1.5 sm:py-2 border-t border-slate-700">
+            <div
+              class="flex justify-between py-1.5 sm:py-2 border-t border-slate-700"
+            >
               <span class="text-slate-400">Sim Date</span>
               <span id="planetSimDate" class="text-white font-mono"></span>
             </div>
             <div class="flex justify-between py-2">
               <span class="text-slate-400">Semi-major axis</span>
-              <span id="planetSemiMajorAxis" class="text-white font-mono"></span>
+              <span
+                id="planetSemiMajorAxis"
+                class="text-white font-mono"
+              ></span>
             </div>
             <div class="flex justify-between py-2">
               <span class="text-slate-400">Eccentricity</span>
@@ -324,7 +362,10 @@
             </div>
             <div class="flex justify-between py-2">
               <span class="text-slate-400">&Omega;</span>
-              <span id="planetAscendingNode" class="text-white font-mono"></span>
+              <span
+                id="planetAscendingNode"
+                class="text-white font-mono"
+              ></span>
             </div>
             <div class="flex justify-between py-2">
               <span class="text-slate-400">M</span>
@@ -332,7 +373,10 @@
             </div>
             <div class="flex justify-between py-2">
               <span class="text-slate-400">E</span>
-              <span id="planetEccentricAnomaly" class="text-white font-mono"></span>
+              <span
+                id="planetEccentricAnomaly"
+                class="text-white font-mono"
+              ></span>
             </div>
             <div class="flex justify-between py-2">
               <span class="text-slate-400">r</span>
@@ -380,7 +424,9 @@
           >
             Planets
           </p>
-          <div class="flex gap-1.5 md:gap-2 overflow-x-auto no-scrollbar md:grid md:grid-cols-2">
+          <div
+            class="flex gap-1.5 md:gap-2 overflow-x-auto no-scrollbar md:grid md:grid-cols-2"
+          >
             <button
               class="planet-btn p-1.5 md:p-2 rounded-lg hover:bg-slate-700/50 transition-all group flex min-w-[3.5rem] md:min-w-0 flex-col items-center justify-center"
               data-planet="sun"

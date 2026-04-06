@@ -269,6 +269,8 @@ let mouse;
 let pointerDownPosition = null;
 let activePointerId = null;
 let isDraggingScene = false;
+let planetInfoHideTimeout = null;
+let lastPlanetInfoOpenAt = 0;
 let simulationDate = new Date();
 let lastAnimationTimestamp = 0;
 
@@ -319,6 +321,7 @@ function init() {
   window.addEventListener("pointermove", onMouseMove);
   window.addEventListener("pointerup", onPointerUp);
   window.addEventListener("pointercancel", onPointerUp);
+  window.addEventListener("click", onOutsidePlanetInfoClick, true);
   renderer.domElement.addEventListener("wheel", onZoomInput, {
     passive: true,
   });
@@ -943,8 +946,13 @@ function onMouseClick(event) {
 function selectPlanet(data) {
   selectedPlanet = data;
   updatePlanetInfoPanel(data);
+  lastPlanetInfoOpenAt = performance.now();
 
   const panel = document.getElementById("planetInfo");
+  if (planetInfoHideTimeout) {
+    clearTimeout(planetInfoHideTimeout);
+    planetInfoHideTimeout = null;
+  }
   panel.classList.remove("hidden");
   setTimeout(() => {
     panel.classList.remove("translate-y-full", "opacity-0");
@@ -957,11 +965,47 @@ function closePlanetInfoPanel() {
     return;
   }
 
+  if (planetInfoHideTimeout) {
+    clearTimeout(planetInfoHideTimeout);
+  }
   panel.classList.add("translate-y-full", "opacity-0");
-  setTimeout(() => {
+  planetInfoHideTimeout = setTimeout(() => {
     panel.classList.add("hidden");
+    planetInfoHideTimeout = null;
   }, 300);
   selectedPlanet = null;
+}
+
+function onOutsidePlanetInfoClick(event) {
+  const panel = document.getElementById("planetInfo");
+  if (!panel || panel.classList.contains("hidden") || isDraggingScene) {
+    return;
+  }
+
+  if (performance.now() - lastPlanetInfoOpenAt < 250) {
+    return;
+  }
+
+  if (event.target instanceof Element && event.target.closest("#planetInfo")) {
+    return;
+  }
+
+  if (event.target instanceof Element && event.target.closest(".planet-btn")) {
+    return;
+  }
+
+  if (isUIEventTarget(event.target)) {
+    return;
+  }
+
+  if (event.target === renderer.domElement) {
+    const intersects = findPlanetIntersections(event.clientX, event.clientY);
+    if (intersects.length > 0) {
+      return;
+    }
+  }
+
+  closePlanetInfoPanel();
 }
 
 function focusOnPlanet(planetData) {
@@ -1007,6 +1051,11 @@ function setupUIControls() {
   document.getElementById("resetView").addEventListener("click", () => {
     stopTracking();
     simulationDate = new Date();
+    timeSpeed = 1;
+    isPaused = false;
+    document.getElementById("speedSlider").value = "1";
+    document.getElementById("playIcon").setAttribute("data-lucide", "pause");
+    lucide.createIcons();
     camera.position.set(0, 60, 120);
     controls.target.set(0, 0, 0);
     controls.update();
