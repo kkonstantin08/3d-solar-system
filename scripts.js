@@ -1053,7 +1053,9 @@ function setupUIControls() {
     simulationDate = new Date();
     timeSpeed = 1;
     isPaused = false;
-    document.getElementById("speedSlider").value = "1";
+    const speedSlider = document.getElementById("speedSlider");
+    speedSlider.value = "1";
+    speedSlider.dispatchEvent(new Event("input", { bubbles: true }));
     document.getElementById("playIcon").setAttribute("data-lucide", "pause");
     lucide.createIcons();
     camera.position.set(0, 60, 120);
