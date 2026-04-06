@@ -1,73 +1,53 @@
 # 3D Solar System
 
-Интерактивный 3D-проект для просмотра Солнечной системы в браузере. Сцена построена на `Three.js`, а интерфейс оформлен с помощью Tailwind CDN и Lucide Icons.
+Интерактивная 3D-визуализация Солнечной системы в браузере. Сцена построена на `Three.js`, интерфейс собран в статическом `index.html` с Tailwind CDN и Lucide Icons.
 
-### Возможности
+## Возможности
 
-- 3D-визуализация Солнца и планет
-- анимация орбит и вращения планет
-- выбор планеты кликом
-- автоматическое приближение камеры и слежение за выбранной планетой
-- отключение трекинга при ручном зуме
-- панель с краткой информацией о планете
-- управление скоростью времени, пауза и сброс вида
+- 3D-сцена с Солнцем, планетами и орбитами
+- выбор планеты кликом или тапом
+- автоматический фокус камеры и tracking выбранной планеты
+- панель с базовыми данными и расчетами по орбитальным элементам
+- управление временем симуляции: пауза, скорость, сброс вида
+- mobile responsive HUD: компактные панели, горизонтальный селектор планет и прокрутка карточки планеты на мобильных
 
-### Управление
+## Управление
 
-- клик по планете: выбрать планету и включить слежение
-- перетаскивание мышью: вращение сцены
-- правая кнопка мыши: панорамирование
-- колесо мыши: масштабирование и отмена трекинга
+- Desktop:
+  - click planet: выбрать планету и включить tracking
+  - drag: вращение сцены
+  - right click: pan
+  - scroll: zoom
+- Mobile:
+  - tap planet: выбрать планету
+  - drag: вращение сцены
+  - pinch: zoom
+  - two fingers: pan
 
-### Запуск
+## Запуск
 
-Так как проект состоит из статических файлов, достаточно открыть его через локальный сервер.
+Проект статический, поэтому достаточно открыть его через любой локальный сервер.
 
-Пример с VS Code Live Server:
+Примеры:
+
+```bash
+python -m http.server
+```
+
+или:
 
 ```text
 Open with Live Server
 ```
 
-После запуска откройте `index.html` в браузере.
+После запуска открой `index.html` в браузере.
 
-### Структура
+## Структура
 
-- `index.html` - разметка интерфейса и подключение библиотек
-- `scripts.js` - логика сцены, анимации, взаимодействия и камеры
+- `index.html` — разметка интерфейса, локальные стили и подключение библиотек
+- `scripts.js` — сцена, анимация, взаимодействие, камера и вычисления
 
-Interactive 3D browser project for exploring the Solar System. The scene is built with `Three.js`, while the interface uses Tailwind CDN and Lucide Icons.
+## Обновления
 
-### Features
-
-- 3D visualization of the Sun and planets
-- animated orbits and planet rotation
-- planet selection on click
-- automatic camera zoom and tracking for the selected planet
-- tracking cancellation on manual zoom
-- compact planet information panel
-- time speed control, pause, and view reset
-
-### Controls
-
-- click a planet: select it and start tracking
-- drag with the mouse: rotate the scene
-- right mouse button: pan
-- mouse wheel: zoom and cancel tracking
-
-### Run
-
-Since this is a static project, you only need to serve it locally.
-
-Example with VS Code Live Server:
-
-```text
-Open with Live Server
-```
-
-Then open `index.html` in your browser.
-
-### Structure
-
-- `index.html` - UI markup and library imports
-- `scripts.js` - scene, animation, interaction, and camera logic
+- README упрощен и приведен к актуальному состоянию проекта
+- добавлены заметки про mobile responsive improvements для HUD и карточки планеты
