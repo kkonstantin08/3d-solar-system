@@ -267,6 +267,7 @@ let cameraOffset = new THREE.Vector3();
 let raycaster;
 let mouse;
 let pointerDownPosition = null;
+let activePointerId = null;
 let isDraggingScene = false;
 let simulationDate = new Date();
 let lastAnimationTimestamp = 0;
@@ -314,11 +315,14 @@ function init() {
   refreshSimulationUI();
 
   window.addEventListener("resize", onWindowResize);
-  window.addEventListener("mousedown", onPointerDown);
-  window.addEventListener("mousemove", onMouseMove);
-  window.addEventListener("mouseup", onPointerUp);
-  window.addEventListener("click", onMouseClick);
+  window.addEventListener("pointerdown", onPointerDown);
+  window.addEventListener("pointermove", onMouseMove);
+  window.addEventListener("pointerup", onPointerUp);
+  window.addEventListener("pointercancel", onPointerUp);
   renderer.domElement.addEventListener("wheel", onZoomInput, {
+    passive: true,
+  });
+  renderer.domElement.addEventListener("touchstart", onTouchStart, {
     passive: true,
   });
 
@@ -809,8 +813,31 @@ function onWindowResize() {
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
+function isPrimaryPointer(event) {
+  return event.isPrimary !== false;
+}
+
+function isUIEventTarget(target) {
+  if (!(target instanceof Element)) {
+    return false;
+  }
+
+  return Boolean(target.closest(".pointer-events-auto"));
+}
+
+function updatePointerCoordinates(clientX, clientY) {
+  mouse.x = (clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+}
+
+function findPlanetIntersections(clientX, clientY) {
+  updatePointerCoordinates(clientX, clientY);
+  raycaster.setFromCamera(mouse, camera);
+  return raycaster.intersectObjects(planets);
+}
+
 function onMouseMove(event) {
-  if (pointerDownPosition) {
+  if (pointerDownPosition && event.pointerId === activePointerId) {
     const dragDistance = Math.hypot(
       event.clientX - pointerDownPosition.x,
       event.clientY - pointerDownPosition.y,
@@ -821,25 +848,62 @@ function onMouseMove(event) {
     }
   }
 
-  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+  if (event.pointerType && event.pointerType !== "mouse") {
+    return;
+  }
 
-  raycaster.setFromCamera(mouse, camera);
-  const intersects = raycaster.intersectObjects(planets);
+  if (isUIEventTarget(event.target)) {
+    document.body.style.cursor = "default";
+    return;
+  }
+
+  const intersects = findPlanetIntersections(event.clientX, event.clientY);
   document.body.style.cursor = intersects.length > 0 ? "pointer" : "default";
 }
 
 function onPointerDown(event) {
+  if (!isPrimaryPointer(event)) {
+    return;
+  }
+
+  if (event.pointerType === "mouse" && event.button !== 0) {
+    pointerDownPosition = null;
+    activePointerId = null;
+    return;
+  }
+
+  if (isUIEventTarget(event.target)) {
+    pointerDownPosition = null;
+    activePointerId = null;
+    return;
+  }
+
   pointerDownPosition = {
     x: event.clientX,
     y: event.clientY,
   };
+  activePointerId = event.pointerId;
   isDraggingScene = false;
 }
 
-function onPointerUp() {
+function onPointerUp(event) {
+  if (!isPrimaryPointer(event)) {
+    return;
+  }
+
+  if (
+    pointerDownPosition &&
+    event.pointerId === activePointerId &&
+    !isDraggingScene &&
+    !isUIEventTarget(event.target) &&
+    !(event.pointerType === "mouse" && event.button !== 0)
+  ) {
+    onMouseClick(event);
+  }
+
   setTimeout(() => {
     pointerDownPosition = null;
+    activePointerId = null;
     isDraggingScene = false;
   }, 0);
 }
@@ -848,6 +912,18 @@ function onZoomInput() {
   if (trackedPlanet) {
     stopTracking();
   }
+
+  closePlanetInfoPanel();
+}
+
+function onTouchStart(event) {
+  if (event.touches.length > 1) {
+    if (trackedPlanet) {
+      stopTracking();
+    }
+
+    closePlanetInfoPanel();
+  }
 }
 
 function onMouseClick(event) {
@@ -855,10 +931,7 @@ function onMouseClick(event) {
     return;
   }
 
-  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-  raycaster.setFromCamera(mouse, camera);
-  const intersects = raycaster.intersectObjects(planets);
+  const intersects = findPlanetIntersections(event.clientX, event.clientY);
 
   if (intersects.length > 0) {
     const planet = intersects[0].object;
@@ -876,6 +949,19 @@ function selectPlanet(data) {
   setTimeout(() => {
     panel.classList.remove("translate-y-full", "opacity-0");
   }, 10);
+}
+
+function closePlanetInfoPanel() {
+  const panel = document.getElementById("planetInfo");
+  if (!panel || panel.classList.contains("hidden")) {
+    return;
+  }
+
+  panel.classList.add("translate-y-full", "opacity-0");
+  setTimeout(() => {
+    panel.classList.add("hidden");
+  }, 300);
+  selectedPlanet = null;
 }
 
 function focusOnPlanet(planetData) {
@@ -941,12 +1027,7 @@ function setupUIControls() {
   });
 
   document.getElementById("closePlanetInfo").addEventListener("click", () => {
-    const panel = document.getElementById("planetInfo");
-    panel.classList.add("translate-y-full", "opacity-0");
-    setTimeout(() => {
-      panel.classList.add("hidden");
-    }, 300);
-    selectedPlanet = null;
+    closePlanetInfoPanel();
   });
 
   document.getElementById("stopTracking").addEventListener("click", () => {

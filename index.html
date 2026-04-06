@@ -15,6 +15,8 @@
         font-family: "Exo 2", sans-serif;
         overflow: hidden;
         background: #000;
+        margin: 0;
+        overscroll-behavior: none;
       }
 
       #canvas-container {
@@ -26,15 +28,15 @@
         z-index: 1;
       }
 
+      #canvas-container canvas {
+        display: block;
+        touch-action: none;
+      }
+
       .glass-panel {
         background: rgba(15, 23, 42, 0.85);
         backdrop-filter: blur(12px);
         border: 1px solid rgba(148, 163, 184, 0.2);
-      }
-
-      .planet-selector:hover {
-        transform: scale(1.1);
-        box-shadow: 0 0 20px currentColor;
       }
 
       .orbit-trail {
@@ -110,6 +112,53 @@
       .no-scrollbar::-webkit-scrollbar {
         display: none;
       }
+
+      @media (hover: hover) {
+        .planet-selector:hover {
+          transform: scale(1.1);
+          box-shadow: 0 0 20px currentColor;
+        }
+      }
+
+      @media (hover: none) {
+        .planet-selector:hover {
+          transform: none;
+          box-shadow: none;
+        }
+      }
+
+      @media (max-width: 767px) {
+        .ui-overlay {
+          min-height: 100vh;
+          min-height: 100svh;
+        }
+
+        #planetInfo.planet-info-panel {
+          left: auto;
+          right: 0.625rem;
+          bottom: 5.25rem;
+          width: min(15.5rem, calc(100vw - 1.25rem)) !important;
+          max-width: min(15.5rem, calc(100vw - 1.25rem)) !important;
+          max-height: min(20rem, calc(100svh - 14rem)) !important;
+          overflow-y: auto;
+          overscroll-behavior: contain;
+        }
+
+        #planetInfo .justify-between {
+          align-items: flex-start;
+          gap: 0.5rem;
+        }
+
+        #planetInfo .justify-between span:last-child {
+          max-width: 44%;
+          text-align: right;
+          overflow-wrap: anywhere;
+        }
+
+        #stopTracking {
+          display: none !important;
+        }
+      }
     </style>
   </head>
   <body class="text-white antialiased">
@@ -130,15 +179,15 @@
 
     <!-- UI Overlay -->
     <div
-      class="relative z-10 pointer-events-none h-screen flex flex-col justify-between p-4 md:p-6"
+      class="ui-overlay relative z-10 pointer-events-none min-h-screen flex flex-col justify-between p-2.5 sm:p-4 md:p-6"
     >
       <!-- Header -->
-      <header class="flex justify-between items-start pointer-events-auto gap-4">
-        <div class="glass-panel rounded-2xl p-4 md:px-5 md:py-4 max-w-md">
-          <div class="flex flex-wrap items-center gap-3 text-xs text-slate-400 md:text-sm">
+      <header class="flex flex-col md:flex-row justify-between items-start pointer-events-auto gap-2.5 md:gap-4">
+        <div class="glass-panel rounded-2xl p-2.5 md:px-5 md:py-4 w-auto max-w-[18rem] md:max-w-md">
+          <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-[11px] text-slate-400 sm:text-xs md:text-sm">
             <span class="flex items-center gap-1.5">
               <i data-lucide="mouse-pointer-click" class="w-3.5 h-3.5 text-blue-400"></i>
-              Click planet: track
+              Click / tap planet: track
             </span>
             <span class="flex items-center gap-1.5">
               <i data-lucide="mouse" class="w-3.5 h-3.5 text-slate-300"></i>
@@ -146,25 +195,27 @@
             </span>
             <span class="flex items-center gap-1.5">
               <i data-lucide="move" class="w-3.5 h-3.5 text-slate-300"></i>
-              Right click: pan
+              <span class="hidden md:inline">Right click: pan</span>
+              <span class="md:hidden">Two fingers: pan</span>
             </span>
             <span class="flex items-center gap-1.5">
               <i data-lucide="zoom-in" class="w-3.5 h-3.5 text-slate-300"></i>
-              Scroll: zoom
+              <span class="hidden md:inline">Scroll: zoom</span>
+              <span class="md:hidden">Pinch: zoom</span>
             </span>
           </div>
         </div>
 
         <!-- Time Controls -->
-        <div class="glass-panel rounded-2xl p-4 flex flex-col gap-3">
-          <div class="flex items-center gap-2 text-sm text-slate-400 mb-1">
+        <div class="glass-panel rounded-2xl p-2.5 md:p-4 flex flex-col gap-2.5 md:gap-3 w-auto min-w-[14rem] md:min-w-0">
+          <div class="flex items-center gap-2 text-xs md:text-sm text-slate-400 mb-0.5 md:mb-1">
             <i data-lucide="clock" class="w-4 h-4"></i>
             <span>Time Control</span>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center justify-between md:justify-start gap-2">
             <button
               id="playPause"
-              class="p-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/40 border border-blue-500/50 transition-all"
+              class="p-1.5 md:p-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/40 border border-blue-500/50 transition-all"
             >
               <i
                 data-lucide="pause"
@@ -174,13 +225,13 @@
             </button>
             <button
               id="resetView"
-              class="p-2 rounded-lg bg-purple-500/20 hover:bg-purple-500/40 border border-purple-500/50 transition-all"
+              class="p-1.5 md:p-2 rounded-lg bg-purple-500/20 hover:bg-purple-500/40 border border-purple-500/50 transition-all"
             >
               <i data-lucide="refresh-cw" class="w-5 h-5 text-purple-400"></i>
             </button>
           </div>
-          <div class="flex items-center gap-2">
-            <span class="text-xs text-slate-500">Pause</span>
+          <div class="flex items-center gap-2 w-full">
+            <span class="text-[11px] text-slate-500">Pause</span>
             <input
               type="range"
               id="speedSlider"
@@ -188,11 +239,11 @@
               max="5"
               step="0.1"
               value="1"
-              class="w-24 h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer slider-track"
+              class="flex-1 min-w-0 h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer slider-track"
             />
-            <span class="text-xs text-slate-500">Fast</span>
+            <span class="text-[11px] text-slate-500">Fast</span>
           </div>
-          <div class="text-[11px] text-slate-400 space-y-1">
+          <div class="text-[10px] md:text-[11px] text-slate-400 space-y-1">
             <div class="flex items-center justify-between gap-3">
               <span>Sim Date</span>
               <span id="simDateValue" class="font-mono text-slate-200"></span>
@@ -207,51 +258,51 @@
 
       <!-- Bottom Section -->
       <div
-        class="flex flex-col md:flex-row justify-between items-end gap-4 pointer-events-auto"
+        class="flex flex-col md:flex-row justify-between items-end gap-3 md:gap-4 pointer-events-auto"
       >
         <!-- Planet Info Panel (Hidden by default) -->
         <div
           id="planetInfo"
-          class="glass-panel rounded-2xl p-6 max-w-sm max-h-[calc(100vh-2rem)] overflow-y-auto no-scrollbar transform translate-y-full opacity-0 planet-card-transition hidden absolute bottom-4 right-4 md:right-6"
+          class="planet-info-panel glass-panel rounded-2xl p-2.5 sm:p-5 md:p-6 max-w-sm md:max-w-sm max-h-[calc(100vh-2rem)] overflow-y-auto no-scrollbar transform translate-y-full opacity-0 planet-card-transition hidden absolute bottom-20 right-2 sm:bottom-28 sm:right-4 md:bottom-4 md:right-6"
         >
           <button
             id="closePlanetInfo"
-            class="absolute top-3 right-3 text-slate-400 hover:text-white transition-colors"
+            class="absolute top-2.5 right-2.5 md:top-3 md:right-3 text-slate-400 hover:text-white transition-colors"
           >
             <i data-lucide="x" class="w-5 h-5"></i>
           </button>
-          <div class="flex items-center gap-4 mb-4">
+          <div class="flex items-center gap-2 sm:gap-4 mb-2.5 sm:mb-4 pr-7 sm:pr-8">
             <div
               id="planetColorIndicator"
-              class="w-16 h-16 rounded-full shadow-lg"
+              class="w-9 h-9 sm:w-16 sm:h-16 rounded-full shadow-lg shrink-0"
             ></div>
             <div>
-              <h2 id="planetName" class="text-2xl font-bold text-white"></h2>
-              <p id="planetType" class="text-blue-400 text-sm"></p>
+              <h2 id="planetName" class="text-base sm:text-2xl font-bold text-white"></h2>
+              <p id="planetType" class="text-xs sm:text-sm text-blue-400"></p>
             </div>
           </div>
-          <div class="space-y-3 text-sm">
-            <div class="flex justify-between py-2 border-b border-slate-700">
+          <div class="space-y-1.5 sm:space-y-3 text-xs sm:text-sm">
+            <div class="flex justify-between py-1.5 sm:py-2 border-b border-slate-700">
               <span class="text-slate-400">Distance from Sun</span>
               <span id="planetDistance" class="text-white font-mono"></span>
             </div>
-            <div class="flex justify-between py-2 border-b border-slate-700">
+            <div class="flex justify-between py-1.5 sm:py-2 border-b border-slate-700">
               <span class="text-slate-400">Orbital Period</span>
               <span id="planetPeriod" class="text-white font-mono"></span>
             </div>
-            <div class="flex justify-between py-2 border-b border-slate-700">
+            <div class="flex justify-between py-1.5 sm:py-2 border-b border-slate-700">
               <span class="text-slate-400">Radius</span>
               <span id="planetRadius" class="text-white font-mono"></span>
             </div>
-            <div class="flex justify-between py-2 border-b border-slate-700">
+            <div class="flex justify-between py-1.5 sm:py-2 border-b border-slate-700">
               <span class="text-slate-400">Temperature</span>
               <span id="planetTemp" class="text-white font-mono"></span>
             </div>
-            <div class="flex justify-between py-2">
+            <div class="flex justify-between py-1.5 sm:py-2">
               <span class="text-slate-400">Moons</span>
               <span id="planetMoons" class="text-white font-mono"></span>
             </div>
-            <div class="flex justify-between py-2 border-t border-slate-700">
+            <div class="flex justify-between py-1.5 sm:py-2 border-t border-slate-700">
               <span class="text-slate-400">Sim Date</span>
               <span id="planetSimDate" class="text-white font-mono"></span>
             </div>
@@ -314,7 +365,7 @@
           </div>
           <button
             id="stopTracking"
-            class="mt-4 w-full py-2 rounded-lg bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 transition-all text-sm font-semibold hidden"
+            class="mt-3 sm:mt-4 w-full py-1.5 sm:py-2 rounded-lg bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 transition-all text-xs sm:text-sm font-semibold hidden"
           >
             Stop Tracking
           </button>
@@ -322,123 +373,123 @@
 
         <!-- Left Side Planet Selector -->
         <div
-          class="fixed left-4 md:left-6 top-[56%] -translate-y-1/2 glass-panel rounded-2xl p-3 pointer-events-auto"
+          class="planet-selector-panel fixed left-2.5 right-2.5 bottom-2.5 md:left-6 md:right-auto md:bottom-auto md:top-[56%] md:-translate-y-1/2 glass-panel rounded-2xl p-2.5 md:p-3 pointer-events-auto"
         >
           <p
-            class="text-xs text-slate-400 mb-3 text-center uppercase tracking-wider"
+            class="text-[10px] md:text-xs text-slate-400 mb-2 md:mb-3 text-center uppercase tracking-wider"
           >
             Planets
           </p>
-          <div class="grid grid-cols-2 gap-2">
+          <div class="flex gap-1.5 md:gap-2 overflow-x-auto no-scrollbar md:grid md:grid-cols-2">
             <button
-              class="planet-btn p-2 rounded-lg hover:bg-slate-700/50 transition-all group"
+              class="planet-btn p-1.5 md:p-2 rounded-lg hover:bg-slate-700/50 transition-all group flex min-w-[3.5rem] md:min-w-0 flex-col items-center justify-center"
               data-planet="sun"
             >
               <div
                 class="w-8 h-8 rounded-full bg-yellow-400 shadow-lg shadow-yellow-400/50 planet-selector transition-all"
               ></div>
               <span
-                class="text-xs text-slate-400 mt-1 block text-center opacity-0 group-hover:opacity-100 transition-opacity"
+                class="text-[10px] md:text-xs text-slate-400 mt-1 block text-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                 >Sun</span
               >
             </button>
             <button
-              class="planet-btn p-2 rounded-lg hover:bg-slate-700/50 transition-all group"
+              class="planet-btn p-1.5 md:p-2 rounded-lg hover:bg-slate-700/50 transition-all group flex min-w-[3.5rem] md:min-w-0 flex-col items-center justify-center"
               data-planet="mercury"
             >
               <div
-                class="w-6 h-6 rounded-full bg-gray-400 shadow-lg planet-selector transition-all"
+                class="w-5 h-5 md:w-6 md:h-6 rounded-full bg-gray-400 shadow-lg planet-selector transition-all"
               ></div>
               <span
-                class="text-xs text-slate-400 mt-1 block text-center opacity-0 group-hover:opacity-100 transition-opacity"
+                class="text-[10px] md:text-xs text-slate-400 mt-1 block text-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                 >Mercury</span
               >
             </button>
             <button
-              class="planet-btn p-2 rounded-lg hover:bg-slate-700/50 transition-all group"
+              class="planet-btn p-1.5 md:p-2 rounded-lg hover:bg-slate-700/50 transition-all group flex min-w-[3.5rem] md:min-w-0 flex-col items-center justify-center"
               data-planet="venus"
             >
               <div
-                class="w-7 h-7 rounded-full bg-orange-300 shadow-lg planet-selector transition-all"
+                class="w-6 h-6 md:w-7 md:h-7 rounded-full bg-orange-300 shadow-lg planet-selector transition-all"
               ></div>
               <span
-                class="text-xs text-slate-400 mt-1 block text-center opacity-0 group-hover:opacity-100 transition-opacity"
+                class="text-[10px] md:text-xs text-slate-400 mt-1 block text-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                 >Venus</span
               >
             </button>
             <button
-              class="planet-btn p-2 rounded-lg hover:bg-slate-700/50 transition-all group"
+              class="planet-btn p-1.5 md:p-2 rounded-lg hover:bg-slate-700/50 transition-all group flex min-w-[3.5rem] md:min-w-0 flex-col items-center justify-center"
               data-planet="earth"
             >
               <div
-                class="w-7 h-7 rounded-full bg-blue-500 shadow-lg shadow-blue-500/50 planet-selector transition-all"
+                class="w-6 h-6 md:w-7 md:h-7 rounded-full bg-blue-500 shadow-lg shadow-blue-500/50 planet-selector transition-all"
               ></div>
               <span
-                class="text-xs text-slate-400 mt-1 block text-center opacity-0 group-hover:opacity-100 transition-opacity"
+                class="text-[10px] md:text-xs text-slate-400 mt-1 block text-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                 >Earth</span
               >
             </button>
             <button
-              class="planet-btn p-2 rounded-lg hover:bg-slate-700/50 transition-all group"
+              class="planet-btn p-1.5 md:p-2 rounded-lg hover:bg-slate-700/50 transition-all group flex min-w-[3.5rem] md:min-w-0 flex-col items-center justify-center"
               data-planet="mars"
             >
               <div
-                class="w-6 h-6 rounded-full bg-red-500 shadow-lg shadow-red-500/50 planet-selector transition-all"
+                class="w-5 h-5 md:w-6 md:h-6 rounded-full bg-red-500 shadow-lg shadow-red-500/50 planet-selector transition-all"
               ></div>
               <span
-                class="text-xs text-slate-400 mt-1 block text-center opacity-0 group-hover:opacity-100 transition-opacity"
+                class="text-[10px] md:text-xs text-slate-400 mt-1 block text-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                 >Mars</span
               >
             </button>
             <button
-              class="planet-btn p-2 rounded-lg hover:bg-slate-700/50 transition-all group"
+              class="planet-btn p-1.5 md:p-2 rounded-lg hover:bg-slate-700/50 transition-all group flex min-w-[3.5rem] md:min-w-0 flex-col items-center justify-center"
               data-planet="jupiter"
             >
               <div
-                class="w-10 h-10 rounded-full bg-orange-200 shadow-lg planet-selector transition-all"
+                class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-orange-200 shadow-lg planet-selector transition-all"
               ></div>
               <span
-                class="text-xs text-slate-400 mt-1 block text-center opacity-0 group-hover:opacity-100 transition-opacity"
+                class="text-[10px] md:text-xs text-slate-400 mt-1 block text-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                 >Jupiter</span
               >
             </button>
             <button
-              class="planet-btn p-2 rounded-lg hover:bg-slate-700/50 transition-all group"
+              class="planet-btn p-1.5 md:p-2 rounded-lg hover:bg-slate-700/50 transition-all group flex min-w-[3.5rem] md:min-w-0 flex-col items-center justify-center"
               data-planet="saturn"
             >
               <div
-                class="w-9 h-9 rounded-full bg-yellow-200 shadow-lg planet-selector transition-all relative"
+                class="w-7 h-7 md:w-9 md:h-9 rounded-full bg-yellow-200 shadow-lg planet-selector transition-all relative"
               >
                 <div
                   class="absolute inset-0 border-2 border-yellow-100/30 rounded-full transform scale-150"
                 ></div>
               </div>
               <span
-                class="text-xs text-slate-400 mt-1 block text-center opacity-0 group-hover:opacity-100 transition-opacity"
+                class="text-[10px] md:text-xs text-slate-400 mt-1 block text-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                 >Saturn</span
               >
             </button>
             <button
-              class="planet-btn p-2 rounded-lg hover:bg-slate-700/50 transition-all group"
+              class="planet-btn p-1.5 md:p-2 rounded-lg hover:bg-slate-700/50 transition-all group flex min-w-[3.5rem] md:min-w-0 flex-col items-center justify-center"
               data-planet="uranus"
             >
               <div
-                class="w-8 h-8 rounded-full bg-cyan-300 shadow-lg planet-selector transition-all"
+                class="w-6 h-6 md:w-8 md:h-8 rounded-full bg-cyan-300 shadow-lg planet-selector transition-all"
               ></div>
               <span
-                class="text-xs text-slate-400 mt-1 block text-center opacity-0 group-hover:opacity-100 transition-opacity"
+                class="text-[10px] md:text-xs text-slate-400 mt-1 block text-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                 >Uranus</span
               >
             </button>
             <button
-              class="planet-btn p-2 rounded-lg hover:bg-slate-700/50 transition-all group"
+              class="planet-btn p-1.5 md:p-2 rounded-lg hover:bg-slate-700/50 transition-all group flex min-w-[3.5rem] md:min-w-0 flex-col items-center justify-center"
               data-planet="neptune"
             >
               <div
-                class="w-8 h-8 rounded-full bg-blue-700 shadow-lg planet-selector transition-all"
+                class="w-6 h-6 md:w-8 md:h-8 rounded-full bg-blue-700 shadow-lg planet-selector transition-all"
               ></div>
               <span
-                class="text-xs text-slate-400 mt-1 block text-center opacity-0 group-hover:opacity-100 transition-opacity"
+                class="text-[10px] md:text-xs text-slate-400 mt-1 block text-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                 >Neptune</span
               >
             </button>
